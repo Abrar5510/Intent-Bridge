@@ -1,0 +1,31 @@
+{ 
+
+  "name": "intent-bridge", 
+
+  "version": "1.0.0", 
+
+  "description": "Natural language API execution for AI agents", 
+
+  "type": "module", 
+
+  "main": "src/index.js", 
+
+  "scripts": { 
+
+    "start": "node src/dashboard.js", 
+
+    "mcp": "node src/mcp-server.js", 
+
+    "dev": "nodemon src/dashboard.js", 
+
+    "test": "node src/test.js" 
+
+  }, 
+
+  "keywords": ["mcp", "ai", "agents", "api"], 
+
+  "author": "Abrar Ahmad", 
+
+  "license": "MIT" 
+
+} 

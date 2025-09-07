@@ -1,0 +1,31 @@
+{ 
+
+  "name": "intent-bridge", 
+
+  "description": "Natural language API execution for AI agents", 
+
+  "version": "1.0.0", 
+
+  "author": "Your Name", 
+
+  "entry": "src/mcp-server.js", 
+
+  "tools": [ 
+
+    { 
+
+      "name": "execute_intent", 
+
+      "description": "Execute any API using natural language", 
+
+      "parameters": { 
+
+        "intent": "string" 
+
+      } 
+
+    } 
+
+  ] 
+
+} 
