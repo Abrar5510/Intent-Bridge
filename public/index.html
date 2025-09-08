@@ -1,223 +1,1253 @@
-// src/dashboard.js 
+<!DOCTYPE html> 
 
-import express from 'express'; 
+<html lang="en"> 
 
-import cors from 'cors'; 
+<head> 
 
-import bodyParser from 'body-parser'; 
+    <meta charset="UTF-8"> 
 
-import path from 'path'; 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
 
-import { fileURLToPath } from 'url'; 
+    <title>IntentBridge - Natural Language API Execution</title> 
 
-import { IntentBridge } from './core/IntentBridge.js'; 
+    <style> 
 
- 
+        * { 
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url)); 
+            margin: 0; 
 
-const app = express(); 
+            padding: 0; 
 
-const intentBridge = new IntentBridge(); 
+            box-sizing: border-box; 
 
- 
-
-// Middleware 
-
-app.use(cors()); 
-
-app.use(bodyParser.json()); 
-
-app.use(express.static(path.join(__dirname, '../public'))); 
+        } 
 
  
 
-// Store execution history 
+        body { 
 
-const executionHistory = []; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
 
- 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
 
-// API Routes 
+            min-height: 100vh; 
 
-app.post('/api/execute', async (req, res) => { 
+            padding: 20px; 
 
-  const { intent } = req.body; 
-
-   
-
-  if (!intent) { 
-
-    return res.status(400).json({ error: 'Intent is required' }); 
-
-  } 
-
-   
-
-  console.log(`\n🌐 Web request: "${intent}"`); 
-
-   
-
-  const result = await intentBridge.execute(intent); 
-
-   
-
-  // Store in history 
-
-  executionHistory.unshift({ 
-
-    intent, 
-
-    result, 
-
-    timestamp: new Date().toISOString() 
-
-  }); 
-
-   
-
-  // Keep only last 50 executions 
-
-  if (executionHistory.length > 50) { 
-
-    executionHistory.pop(); 
-
-  } 
-
-   
-
-  res.json(result); 
-
-}); 
+        } 
 
  
 
-app.get('/api/apis', (req, res) => { 
+        .container { 
 
-  const apis = intentBridge.listAPIs(); 
+            max-width: 1400px; 
 
-  res.json({ apis }); 
+            margin: 0 auto; 
 
-}); 
-
- 
-
-app.get('/api/stats', (req, res) => { 
-
-  const stats = intentBridge.getStats(); 
-
-  res.json(stats); 
-
-}); 
+        } 
 
  
 
-app.get('/api/history', (req, res) => { 
+        header { 
 
-  res.json({ history: executionHistory }); 
+            text-align: center; 
 
-}); 
+            color: white; 
 
- 
+            margin-bottom: 40px; 
 
-app.post('/api/demo', async (req, res) => { 
+            animation: fadeIn 0.5s ease-in; 
 
-  // Run demo scenarios 
-
-  const demos = [ 
-
-    "get weather in New York", 
-
-    "post 'Hello from IntentBridge!' to Twitter", 
-
-    "send 'Team update: IntentBridge is working!' to Slack channel general", 
-
-    "create GitHub repository called awesome-intent-bridge" 
-
-  ]; 
-
-   
-
-  const results = []; 
-
-  for (const demo of demos) { 
-
-    const result = await intentBridge.execute(demo); 
-
-    results.push({ intent: demo, result }); 
-
-  } 
-
-   
-
-  res.json({ demos: results }); 
-
-}); 
+        } 
 
  
 
-// Health check 
+        h1 { 
 
-app.get('/health', (req, res) => { 
+            font-size: 3.5em; 
 
-  res.json({  
+            margin-bottom: 10px; 
 
-    status: 'ok',  
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2); 
 
-    service: 'IntentBridge', 
+            letter-spacing: -1px; 
 
-    timestamp: new Date().toISOString() 
-
-  }); 
-
-}); 
+        } 
 
  
 
-const PORT = process.env.PORT || 3000; 
+        .tagline { 
 
-app.listen(PORT, () => { 
+            font-size: 1.3em; 
 
-  console.log(`\n🚀 IntentBridge Dashboard running!`); 
+            opacity: 0.95; 
 
-  console.log(`📍 Local: http://localhost:${PORT}`); 
+            margin-bottom: 20px; 
 
-  console.log(`📍 Network: http://${getLocalIP()}:${PORT}`); 
-
-  console.log(`\n💡 Try these examples:`); 
-
-  console.log(`   - "get weather in Tokyo"`); 
-
-  console.log(`   - "post 'Hello World' to Twitter"`); 
-
-  console.log(`   - "send 'Hi team' to Slack"`); 
-
-  console.log(`   - "create GitHub repo called my-project"`); 
-
-}); 
+        } 
 
  
 
-function getLocalIP() { 
+        .stats-bar { 
 
-  const os = require('os'); 
+            display: flex; 
 
-  const interfaces = os.networkInterfaces(); 
+            justify-content: center; 
 
-  for (const name of Object.keys(interfaces)) { 
+            gap: 30px; 
 
-    for (const iface of interfaces[name]) { 
+            margin-bottom: 30px; 
 
-      if (iface.family === 'IPv4' && !iface.internal) { 
+        } 
 
-        return iface.address; 
+ 
 
-      } 
+        .stat { 
 
-    } 
+            background: rgba(255,255,255,0.2); 
 
-  } 
+            padding: 10px 20px; 
 
-  return 'localhost'; 
+            border-radius: 20px; 
 
-} 
+            backdrop-filter: blur(10px); 
+
+        } 
+
+ 
+
+        .stat-value { 
+
+            font-size: 1.5em; 
+
+            font-weight: bold; 
+
+        } 
+
+ 
+
+        .stat-label { 
+
+            font-size: 0.9em; 
+
+            opacity: 0.9; 
+
+        } 
+
+ 
+
+        .main-content { 
+
+            display: grid; 
+
+            grid-template-columns: 1fr 1fr; 
+
+            gap: 30px; 
+
+            margin-bottom: 30px; 
+
+        } 
+
+ 
+
+        @media (max-width: 968px) { 
+
+            .main-content { 
+
+                grid-template-columns: 1fr; 
+
+            } 
+
+        } 
+
+ 
+
+        .panel { 
+
+            background: white; 
+
+            border-radius: 20px; 
+
+            padding: 30px; 
+
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
+
+            animation: slideUp 0.5s ease-out; 
+
+        } 
+
+ 
+
+        .panel h2 { 
+
+            color: #667eea; 
+
+            margin-bottom: 20px; 
+
+            font-size: 1.5em; 
+
+        } 
+
+ 
+
+        .input-group { 
+
+            display: flex; 
+
+            gap: 10px; 
+
+            margin-bottom: 20px; 
+
+        } 
+
+ 
+
+        .intent-input { 
+
+            flex: 1; 
+
+            padding: 15px 20px; 
+
+            font-size: 16px; 
+
+            border: 2px solid #e0e0e0; 
+
+            border-radius: 10px; 
+
+            transition: all 0.3s; 
+
+        } 
+
+ 
+
+        .intent-input:focus { 
+
+            outline: none; 
+
+            border-color: #667eea; 
+
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); 
+
+        } 
+
+ 
+
+        .execute-btn { 
+
+            padding: 15px 30px; 
+
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+
+            color: white; 
+
+            border: none; 
+
+            border-radius: 10px; 
+
+            font-size: 16px; 
+
+            font-weight: 600; 
+
+            cursor: pointer; 
+
+            transition: all 0.3s; 
+
+        } 
+
+ 
+
+        .execute-btn:hover { 
+
+            transform: translateY(-2px); 
+
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3); 
+
+        } 
+
+ 
+
+        .execute-btn:active { 
+
+            transform: translateY(0); 
+
+        } 
+
+ 
+
+        .execute-btn:disabled { 
+
+            opacity: 0.5; 
+
+            cursor: not-allowed; 
+
+        } 
+
+ 
+
+        .examples { 
+
+            display: flex; 
+
+            flex-wrap: wrap; 
+
+            gap: 10px; 
+
+            margin-bottom: 20px; 
+
+        } 
+
+ 
+
+        .example-chip { 
+
+            padding: 8px 15px; 
+
+            background: #f5f5f5; 
+
+            border-radius: 20px; 
+
+            font-size: 14px; 
+
+            cursor: pointer; 
+
+            transition: all 0.2s; 
+
+            border: 2px solid transparent; 
+
+        } 
+
+ 
+
+        .example-chip:hover { 
+
+            background: #e8e8e8; 
+
+            border-color: #667eea; 
+
+            transform: translateY(-1px); 
+
+        } 
+
+ 
+
+        .result-box { 
+
+            background: #f8f9fa; 
+
+            border-radius: 10px; 
+
+            padding: 20px; 
+
+            margin-top: 20px; 
+
+            min-height: 150px; 
+
+            position: relative; 
+
+            overflow: hidden; 
+
+        } 
+
+ 
+
+        .result-success { 
+
+            border-left: 4px solid #4caf50; 
+
+        } 
+
+ 
+
+        .result-error { 
+
+            border-left: 4px solid #f44336; 
+
+        } 
+
+ 
+
+        .result-mock { 
+
+            border-left: 4px solid #ff9800; 
+
+        } 
+
+ 
+
+        .result-message { 
+
+            font-size: 18px; 
+
+            font-weight: 600; 
+
+            color: #333; 
+
+            margin-bottom: 10px; 
+
+        } 
+
+ 
+
+        .result-details { 
+
+            font-size: 14px; 
+
+            color: #666; 
+
+            font-family: 'Courier New', monospace; 
+
+            white-space: pre-wrap; 
+
+            word-wrap: break-word; 
+
+        } 
+
+ 
+
+        .loading { 
+
+            display: none; 
+
+            justify-content: center; 
+
+            padding: 20px; 
+
+        } 
+
+ 
+
+        .loading.active { 
+
+            display: flex; 
+
+        } 
+
+ 
+
+        .spinner { 
+
+            width: 40px; 
+
+            height: 40px; 
+
+            border: 4px solid #f3f3f3; 
+
+            border-top: 4px solid #667eea; 
+
+            border-radius: 50%; 
+
+            animation: spin 1s linear infinite; 
+
+        } 
+
+ 
+
+        .api-list { 
+
+            display: grid; 
+
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+
+            gap: 15px; 
+
+        } 
+
+ 
+
+        .api-card { 
+
+            padding: 15px; 
+
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+
+            color: white; 
+
+            border-radius: 10px; 
+
+            text-align: center; 
+
+            font-weight: 600; 
+
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3); 
+
+            position: relative; 
+
+            overflow: hidden; 
+
+        } 
+
+ 
+
+        .api-card::before { 
+
+            content: '✓'; 
+
+            position: absolute; 
+
+            top: 5px; 
+
+            right: 10px; 
+
+            font-size: 20px; 
+
+            opacity: 0.5; 
+
+        } 
+
+ 
+
+        .history-item { 
+
+            padding: 15px; 
+
+            background: #f8f9fa; 
+
+            border-radius: 8px; 
+
+            margin-bottom: 10px; 
+
+            border-left: 3px solid #667eea; 
+
+            cursor: pointer; 
+
+            transition: all 0.2s; 
+
+        } 
+
+ 
+
+        .history-item:hover { 
+
+            transform: translateX(5px); 
+
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+
+        } 
+
+ 
+
+        .history-intent { 
+
+            font-weight: 600; 
+
+            color: #333; 
+
+            margin-bottom: 5px; 
+
+        } 
+
+ 
+
+        .history-time { 
+
+            font-size: 12px; 
+
+            color: #999; 
+
+        } 
+
+ 
+
+        .demo-btn { 
+
+            width: 100%; 
+
+            padding: 12px; 
+
+            background: linear-gradient(135deg, #ff6b6b, #feca57); 
+
+            color: white; 
+
+            border: none; 
+
+            border-radius: 10px; 
+
+            font-size: 16px; 
+
+            font-weight: 600; 
+
+            cursor: pointer; 
+
+            transition: all 0.3s; 
+
+            margin-top: 20px; 
+
+        } 
+
+ 
+
+        .demo-btn:hover { 
+
+            transform: translateY(-2px); 
+
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3); 
+
+        } 
+
+ 
+
+        @keyframes fadeIn { 
+
+            from { opacity: 0; transform: translateY(-20px); } 
+
+            to { opacity: 1; transform: translateY(0); } 
+
+        } 
+
+ 
+
+        @keyframes slideUp { 
+
+            from { opacity: 0; transform: translateY(30px); } 
+
+            to { opacity: 1; transform: translateY(0); } 
+
+        } 
+
+ 
+
+        @keyframes spin { 
+
+            0% { transform: rotate(0deg); } 
+
+            100% { transform: rotate(360deg); } 
+
+        } 
+
+ 
+
+        .badge { 
+
+            display: inline-block; 
+
+            padding: 4px 8px; 
+
+            border-radius: 4px; 
+
+            font-size: 12px; 
+
+            font-weight: 600; 
+
+            margin-left: 10px; 
+
+        } 
+
+ 
+
+        .badge-mock { 
+
+            background: #ff9800; 
+
+            color: white; 
+
+        } 
+
+ 
+
+        .badge-live { 
+
+            background: #4caf50; 
+
+            color: white; 
+
+        } 
+
+ 
+
+        .flow-diagram { 
+
+            margin: 20px 0; 
+
+            padding: 20px; 
+
+            background: #f8f9fa; 
+
+            border-radius: 10px; 
+
+            text-align: center; 
+
+        } 
+
+ 
+
+        .flow-step { 
+
+            display: inline-block; 
+
+            padding: 10px 20px; 
+
+            background: white; 
+
+            border: 2px solid #667eea; 
+
+            border-radius: 8px; 
+
+            margin: 5px; 
+
+            font-weight: 600; 
+
+            animation: fadeIn 0.5s ease-in; 
+
+        } 
+
+ 
+
+        .flow-arrow { 
+
+            display: inline-block; 
+
+            margin: 0 10px; 
+
+            color: #667eea; 
+
+            font-size: 20px; 
+
+        } 
+
+    </style> 
+
+</head> 
+
+<body> 
+
+    <div class="container"> 
+
+        <header> 
+
+            <h1>🌉 IntentBridge</h1> 
+
+            <p class="tagline">Natural Language → Any API → Instant Results</p> 
+
+             
+
+            <div class="stats-bar" id="statsBar"> 
+
+                <div class="stat"> 
+
+                    <div class="stat-value" id="totalCalls">0</div> 
+
+                    <div class="stat-label">Total Calls</div> 
+
+                </div> 
+
+                <div class="stat"> 
+
+                    <div class="stat-value" id="successRate">0%</div> 
+
+                    <div class="stat-label">Success Rate</div> 
+
+                </div> 
+
+                <div class="stat"> 
+
+                    <div class="stat-value" id="avgTime">0ms</div> 
+
+                    <div class="stat-label">Avg Response</div> 
+
+                </div> 
+
+                <div class="stat"> 
+
+                    <div class="stat-value" id="patterns">0</div> 
+
+                    <div class="stat-label">Learned Patterns</div> 
+
+                </div> 
+
+            </div> 
+
+        </header> 
+
+ 
+
+        <div class="main-content"> 
+
+            <!-- Left Panel - Execution --> 
+
+            <div class="panel"> 
+
+                <h2>🎯 Execute Intent</h2> 
+
+                 
+
+                <div class="input-group"> 
+
+                    <input  
+
+                        type="text"  
+
+                        class="intent-input"  
+
+                        id="intentInput" 
+
+                        placeholder="Try: 'get weather in London' or 'post Hello to Twitter'" 
+
+                        onkeypress="if(event.key === 'Enter') executeIntent()" 
+
+                    > 
+
+                    <button class="execute-btn" id="executeBtn" onclick="executeIntent()"> 
+
+                        Execute 
+
+                    </button> 
+
+                </div> 
+
+ 
+
+                <p style="color: #666; margin-bottom: 15px;">Quick Examples:</p> 
+
+                <div class="examples"> 
+
+                    <div class="example-chip" onclick="setIntent('get weather in New York')"> 
+
+                        🌤️ Weather in NYC 
+
+                    </div> 
+
+                    <div class="example-chip" onclick="setIntent('post Hello World to Twitter')"> 
+
+                        🐦 Tweet Something 
+
+                    </div> 
+
+                    <div class="example-chip" onclick="setIntent('send Hi team to Slack')"> 
+
+                        💬 Slack Message 
+
+                    </div> 
+
+                    <div class="example-chip" onclick="setIntent('create GitHub repo called awesome-project')"> 
+
+                        📦 Create Repo 
+
+                    </div> 
+
+                </div> 
+
+ 
+
+                <div class="loading" id="loading"> 
+
+                    <div class="spinner"></div> 
+
+                </div> 
+
+ 
+
+                <div class="result-box" id="resultBox" style="display: none;"> 
+
+                    <div class="result-message" id="resultMessage"></div> 
+
+                    <div class="result-details" id="resultDetails"></div> 
+
+                </div> 
+
+ 
+
+                <button class="demo-btn" onclick="runDemo()"> 
+
+                    🎬 Run Full Demo (All APIs) 
+
+                </button> 
+
+            </div> 
+
+ 
+
+            <!-- Right Panel - Info --> 
+
+            <div class="panel"> 
+
+                <h2>🔌 Available APIs</h2> 
+
+                <div class="api-list" id="apiList"> 
+
+                    <!-- APIs will be loaded here --> 
+
+                </div> 
+
+ 
+
+                <h2 style="margin-top: 30px;">📝 Recent History</h2> 
+
+                <div id="historyList"> 
+
+                    <!-- History will be loaded here --> 
+
+                </div> 
+
+            </div> 
+
+        </div> 
+
+ 
+
+        <!-- Flow Visualization --> 
+
+        <div class="panel"> 
+
+            <h2>🔄 How It Works</h2> 
+
+            <div class="flow-diagram"> 
+
+                <span class="flow-step">💬 Natural Language</span> 
+
+                <span class="flow-arrow">→</span> 
+
+                <span class="flow-step">🧠 AI Parser</span> 
+
+                <span class="flow-arrow">→</span> 
+
+                <span class="flow-step">🔍 Find API</span> 
+
+                <span class="flow-arrow">→</span> 
+
+                <span class="flow-step">🔐 Auth</span> 
+
+                <span class="flow-arrow">→</span> 
+
+                <span class="flow-step">📡 Execute</span> 
+
+                <span class="flow-arrow">→</span> 
+
+                <span class="flow-step">✅ Result</span> 
+
+            </div> 
+
+        </div> 
+
+    </div> 
+
+ 
+
+    <script> 
+
+        // Global state 
+
+        let isExecuting = false; 
+
+ 
+
+        // Load initial data 
+
+        async function loadInitialData() { 
+
+            await loadAPIs(); 
+
+            await loadStats(); 
+
+            await loadHistory(); 
+
+        } 
+
+ 
+
+        // Load available APIs 
+
+        async function loadAPIs() { 
+
+            try { 
+
+                const response = await fetch('/api/apis'); 
+
+                const data = await response.json(); 
+
+                 
+
+                const apiList = document.getElementById('apiList'); 
+
+                apiList.innerHTML = data.apis.map(api => ` 
+
+                    <div class="api-card">${api}</div> 
+
+                `).join(''); 
+
+            } catch (error) { 
+
+                console.error('Failed to load APIs:', error); 
+
+            } 
+
+        } 
+
+ 
+
+        // Load stats 
+
+        async function loadStats() { 
+
+            try { 
+
+                const response = await fetch('/api/stats'); 
+
+                const stats = await response.json(); 
+
+                 
+
+                document.getElementById('totalCalls').textContent = stats.totalExecutions || 0; 
+
+                document.getElementById('successRate').textContent = stats.successRate || '0%'; 
+
+                document.getElementById('avgTime').textContent =  
+
+                    stats.averageResponseTime ? `${Math.round(stats.averageResponseTime)}ms` : '0ms'; 
+
+                document.getElementById('patterns').textContent = stats.uniquePatterns || 0; 
+
+            } catch (error) { 
+
+                console.error('Failed to load stats:', error); 
+
+            } 
+
+        } 
+
+ 
+
+        // Load history 
+
+        async function loadHistory() { 
+
+            try { 
+
+                const response = await fetch('/api/history'); 
+
+                const data = await response.json(); 
+
+                 
+
+                const historyList = document.getElementById('historyList'); 
+
+                const items = data.history.slice(0, 5); 
+
+                 
+
+                if (items.length === 0) { 
+
+                    historyList.innerHTML = '<p style="color: #999;">No history yet</p>'; 
+
+                } else { 
+
+                    historyList.innerHTML = items.map(item => ` 
+
+                        <div class="history-item" onclick="setIntent('${item.intent.replace(/'/g, "\\'")}')"> 
+
+                            <div class="history-intent">${item.intent}</div> 
+
+                            <div class="history-time">${new Date(item.timestamp).toLocaleTimeString()}</div> 
+
+                        </div> 
+
+                    `).join(''); 
+
+                } 
+
+            } catch (error) { 
+
+                console.error('Failed to load history:', error); 
+
+            } 
+
+        } 
+
+ 
+
+        // Set intent in input 
+
+        function setIntent(intent) { 
+
+            document.getElementById('intentInput').value = intent; 
+
+            document.getElementById('intentInput').focus(); 
+
+        } 
+
+ 
+
+        // Execute intent 
+
+        async function executeIntent() { 
+
+            if (isExecuting) return; 
+
+             
+
+            const input = document.getElementById('intentInput'); 
+
+            const intent = input.value.trim(); 
+
+             
+
+            if (!intent) { 
+
+                alert('Please enter an intent'); 
+
+                return; 
+
+            } 
+
+             
+
+            isExecuting = true; 
+
+            const executeBtn = document.getElementById('executeBtn'); 
+
+            const loading = document.getElementById('loading'); 
+
+            const resultBox = document.getElementById('resultBox'); 
+
+            const resultMessage = document.getElementById('resultMessage'); 
+
+            const resultDetails = document.getElementById('resultDetails'); 
+
+             
+
+            // Update UI 
+
+            executeBtn.disabled = true; 
+
+            executeBtn.textContent = 'Executing...'; 
+
+            loading.classList.add('active'); 
+
+            resultBox.style.display = 'none'; 
+
+             
+
+            try { 
+
+                const response = await fetch('/api/execute', { 
+
+                    method: 'POST', 
+
+                    headers: { 'Content-Type': 'application/json' }, 
+
+                    body: JSON.stringify({ intent }) 
+
+                }); 
+
+                 
+
+                const result = await response.json(); 
+
+                 
+
+                // Update result display 
+
+                resultBox.style.display = 'block'; 
+
+                resultBox.className = 'result-box ' +  
+
+                    (result.success ? (result.mock ? 'result-mock' : 'result-success') : 'result-error'); 
+
+                 
+
+                if (result.success) { 
+
+                    resultMessage.innerHTML = result.message +  
+
+                        (result.mock ? '<span class="badge badge-mock">DEMO MODE</span>' :  
+
+                                      '<span class="badge badge-live">LIVE</span>'); 
+
+                     
+
+                    if (result.data) { 
+
+                        resultDetails.textContent = JSON.stringify(result.data, null, 2); 
+
+                    } 
+
+                } else { 
+
+                    resultMessage.textContent = '❌ ' + (result.error || 'Failed to execute'); 
+
+                    resultDetails.textContent = result.suggestion || ''; 
+
+                } 
+
+                 
+
+                // Reload stats and history 
+
+                await loadStats(); 
+
+                await loadHistory(); 
+
+                 
+
+            } catch (error) { 
+
+                resultBox.style.display = 'block'; 
+
+                resultBox.className = 'result-box result-error'; 
+
+                resultMessage.textContent = '❌ Error'; 
+
+                resultDetails.textContent = error.message; 
+
+            } finally { 
+
+                isExecuting = false; 
+
+                executeBtn.disabled = false; 
+
+                executeBtn.textContent = 'Execute'; 
+
+                loading.classList.remove('active'); 
+
+            } 
+
+        } 
+
+ 
+
+        // Run demo 
+
+        async function runDemo() { 
+
+            const demos = [ 
+
+                "get weather in Tokyo", 
+
+                "post 'IntentBridge Demo!' to Twitter", 
+
+                "send 'Hello team!' to Slack", 
+
+                "create GitHub repo called intent-bridge-demo" 
+
+            ]; 
+
+             
+
+            for (const demo of demos) { 
+
+                setIntent(demo); 
+
+                await executeIntent(); 
+
+                await new Promise(resolve => setTimeout(resolve, 2000)); 
+
+            } 
+
+        } 
+
+ 
+
+        // Initialize on load 
+
+        window.addEventListener('DOMContentLoaded', loadInitialData); 
+
+         
+
+        // Refresh stats every 10 seconds 
+
+        setInterval(loadStats, 10000); 
+
+    </script> 
+
+</body> 
+
+</html> 
