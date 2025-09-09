@@ -10,8 +10,159 @@ import { LearningEngine } from './LearningEngine.js';
 
 import { ResponseNormalizer } from './ResponseNormalizer.js'; 
 
+ // Add this to IntentBridge.js 
+
+import { APILearner } from './APILearner.js'; 
+
  
 
+export class IntentBridge { 
+
+  constructor() { 
+
+    this.parser = new IntentParser(); 
+
+    this.registry = new APIRegistry(); 
+
+    this.executor = new APIExecutor(); 
+
+    this.learner = new LearningEngine(); 
+
+    this.normalizer = new ResponseNormalizer(); 
+
+     
+
+    // Add the API Learner 
+
+    this.apiLearner = new APILearner(); 
+
+     
+
+    // Make registry globally accessible for learner 
+
+    global.apiRegistry = this.registry; 
+
+     
+
+    console.log('✅ IntentBridge ready with Auto-Learning!'); 
+
+  } 
+
+ 
+
+  async execute(intent) { 
+
+    // Check if user wants to add a new API 
+
+    if (intent.toLowerCase().includes('integrate') ||  
+
+        intent.toLowerCase().includes('add') &&  
+
+        intent.toLowerCase().includes('api')) { 
+
+      return await this.handleAPIIntegration(intent); 
+
+    } 
+
+     
+
+    // Rest of your existing code... 
+    
+  } 
+
+ 
+
+  async handleAPIIntegration(intent) { 
+
+    console.log('🎯 User wants to add a new API'); 
+
+     
+
+    // Extract API name and key from intent 
+
+    const apiInfo = this.extractAPIInfo(intent); 
+
+     
+
+    if (!apiInfo.name && !apiInfo.url) { 
+
+      return { 
+
+        success: false, 
+
+        message: 'Please specify which API to integrate', 
+
+        example: 'Try: "integrate Stripe API with key sk_test_..."' 
+
+      }; 
+
+    } 
+
+     
+
+    // Learn the API automatically! 
+
+    const result = await this.apiLearner.learnAPI(apiInfo); 
+
+     
+
+    if (result.success) { 
+
+      return { 
+
+        success: true, 
+
+        message: result.message, 
+
+        endpoints: result.endpoints, 
+
+        ready: true, 
+
+        example: `Now you can use commands like: "charge $50 using ${apiInfo.name}"` 
+
+      }; 
+
+    } 
+
+     
+
+    return result; 
+
+  } 
+
+ 
+
+  extractAPIInfo(intent) { 
+
+    // Extract API name 
+
+    const nameMatch = intent.match(/integrate\s+(\w+)|add\s+(\w+)/i); 
+
+    const name = nameMatch ? (nameMatch[1] || nameMatch[2]) : null; 
+
+     
+
+    // Extract API key 
+
+    const keyMatch = intent.match(/key[:\s]+([^\s]+)|api[_\s]?key[:\s]+([^\s]+)/i); 
+
+    const apiKey = keyMatch ? (keyMatch[1] || keyMatch[2]) : null; 
+
+     
+
+    // Extract URL if provided 
+
+    const urlMatch = intent.match(/https?:\/\/[^\s]+/); 
+
+    const url = urlMatch ? urlMatch[0] : null; 
+
+     
+
+    return { name, apiKey, url }; 
+
+  } 
+
+} 
 export class IntentBridge { 
 
   constructor() { 

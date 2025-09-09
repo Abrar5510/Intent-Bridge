@@ -42,7 +42,71 @@ const server = new Server(
 
     capabilities: { 
 
-      tools: {} 
+      
+
+  tools: [ 
+
+  { 
+
+    name: 'execute_intent', 
+
+    description: 'Execute any API action using natural language' 
+
+  }, 
+
+  { 
+
+    name: 'learn_api', 
+
+    description: 'Automatically learn and integrate a new API', 
+
+    inputSchema: { 
+
+      type: 'object', 
+
+      properties: { 
+
+        name: { 
+
+          type: 'string', 
+
+          description: 'API name (e.g., Stripe, Twilio)' 
+
+        }, 
+
+        apiKey: { 
+
+          type: 'string', 
+
+          description: 'Your API key for authentication' 
+
+        }, 
+
+        docsUrl: { 
+
+          type: 'string', 
+
+          description: 'Optional: Documentation URL' 
+
+        } 
+
+      }, 
+
+      required: ['name', 'apiKey'] 
+
+    } 
+
+  }, 
+
+  { 
+
+    name: 'list_learned_apis', 
+
+    description: 'List all automatically learned APIs' 
+
+  } 
+
+]  
 
     } 
 
