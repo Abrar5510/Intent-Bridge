@@ -1,0 +1,161 @@
+# smithery.yaml 
+
+name: intent-bridge 
+
+version: 1.0.0 
+
+description: Auto-learning API integration through natural language 
+
+author: Your Team Name 
+
+license: MIT 
+
+ 
+
+# MCP server configuration 
+
+mcp: 
+
+  command: node 
+
+  args: 
+
+    - src/mcp-server.js 
+
+   
+
+# Available tools 
+
+tools: 
+
+  - name: execute_intent 
+
+    description: Execute any API action using natural language 
+
+    parameters: 
+
+      intent: 
+
+        type: string 
+
+        description: Natural language description of what you want to do 
+
+        required: true 
+
+    examples: 
+
+      - "get weather in Tokyo" 
+
+      - "charge $50 using Stripe" 
+
+      - "send SMS to +1234567890" 
+
+ 
+
+  - name: learn_api 
+
+    description: Automatically learn and integrate a new API 
+
+    parameters: 
+
+      name: 
+
+        type: string 
+
+        description: Name of the API (e.g., Stripe, Twilio) 
+
+        required: true 
+
+      apiKey: 
+
+        type: string 
+
+        description: Your API key for authentication 
+
+        required: true 
+
+      docsUrl: 
+
+        type: string 
+
+        description: Optional documentation URL 
+
+        required: false 
+
+    examples: 
+
+      - name: "Stripe" 
+
+        apiKey: "sk_test_123" 
+
+      - name: "Twilio" 
+
+        apiKey: "AC123" 
+
+ 
+
+  - name: list_apis 
+
+    description: List all available and learned APIs 
+
+    parameters: {} 
+
+ 
+
+  - name: get_stats 
+
+    description: Get usage statistics and performance metrics 
+
+    parameters: {} 
+
+ 
+
+# Environment variables (users will provide their own) 
+
+environment: 
+
+  - name: DEEPSEEK_API_KEY 
+
+    description: DeepSeek API key for AI parsing 
+
+    required: true 
+
+  - name: DESCOPE_PROJECT_ID 
+
+    description: Descope project ID for authentication 
+
+    required: false 
+
+  - name: CEQUENCE_API_KEY 
+
+    description: Cequence API key for security gateway 
+
+    required: false 
+
+ 
+
+# Tags for discovery 
+
+tags: 
+
+  - api-integration 
+
+  - natural-language 
+
+  - ai-powered 
+
+  - auto-learning 
+
+  - mcp 
+
+  - descope 
+
+  - cequence 
+
+ 
+
+# Documentation 
+
+readme: README.md 
+
+repository: https://github.com/Abrar5510/Intent-Bridge 

@@ -1,0 +1,29 @@
+{
+  "patterns": {
+    "get_weather_in_tokyo": {
+      "intent": "get weather in Tokyo",
+      "parsed": {
+        "action": "GET",
+        "service": "weather",
+        "resource": "forecast",
+        "parameters": {
+          "location": "tokyo"
+        }
+      },
+      "apiConfig": {
+        "name": "OpenWeatherMap"
+      },
+      "executionCount": 1,
+      "averageResponseTime": 3660,
+      "lastUsed": "2025-09-09T15:30:18.732Z"
+    }
+  },
+  "stats": {
+    "totalExecutions": 1,
+    "successfulExecutions": 1,
+    "failedExecutions": 0,
+    "uniquePatterns": 1,
+    "averageResponseTime": 3660
+  },
+  "lastUpdated": "2025-09-09T15:30:18.732Z"
+}

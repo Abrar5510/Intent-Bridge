@@ -3,8 +3,7 @@
 import OpenAI from 'openai'; 
 
 import axios from 'axios'; 
-
-import * as cheerio from 'cheerio';  
+//import * as cheerio from 'cheerio';  
 
 export class APILearner { 
 
