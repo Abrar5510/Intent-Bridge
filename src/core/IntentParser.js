@@ -1,6 +1,6 @@
 // src/core/IntentParser.js 
 
-import OpenAI from 'openai'; 
+import axios from 'axios'; 
 
  
 
@@ -8,21 +8,23 @@ export class IntentParser {
 
   constructor() { 
 
-    if (!process.env.OPENAI_API_KEY) { 
+    this.apiKey = process.env.DEEPSEEK_API_KEY; 
 
-      console.warn('⚠️ OpenAI API key not found, using fallback parser'); 
+    this.baseUrl = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1'; 
 
-      this.useOpenAI = false; 
+     
+
+    if (!this.apiKey) { 
+
+      console.warn('⚠️ DeepSeek API key not found, using fallback parser'); 
+
+      this.useAI = false; 
 
     } else { 
 
-      this.openai = new OpenAI({ 
+      this.useAI = true; 
 
-        apiKey: process.env.OPENAI_API_KEY 
-
-      }); 
-
-      this.useOpenAI = true; 
+      console.log('✅ DeepSeek AI Parser initialized'); 
 
     } 
 
@@ -36,7 +38,7 @@ export class IntentParser {
 
   async parse(intent) { 
 
-    // Check cache 
+    // Check cache first 
 
     const cached = this.cache.get(intent.toLowerCase()); 
 
@@ -54,9 +56,9 @@ export class IntentParser {
 
      
 
-    if (this.useOpenAI) { 
+    if (this.useAI) { 
 
-      parsed = await this.parseWithAI(intent); 
+      parsed = await this.parseWithDeepSeek(intent); 
 
     } else { 
 
@@ -66,7 +68,7 @@ export class IntentParser {
 
      
 
-    // Cache result 
+    // Cache the result 
 
     this.cache.set(intent.toLowerCase(), parsed); 
 
@@ -78,61 +80,89 @@ export class IntentParser {
 
  
 
-  async parseWithAI(intent) { 
+  async parseWithDeepSeek(intent) { 
 
-    const systemPrompt = `You are an intent parser for API calls. Parse the user's intent into a structured format. 
+    const systemPrompt = `You are an intent parser for API calls. Parse the user's intent into structured JSON. 
 
  
 
-Return a JSON object with: 
+Return ONLY a JSON object with these fields: 
 
-- action: GET, POST, CREATE, UPDATE, DELETE, SEND, FETCH 
+- action: One of GET, POST, CREATE, UPDATE, DELETE, SEND, FETCH, CHARGE, CONVERT 
 
-- service: twitter, slack, github, weather, email, calendar, etc. 
+- service: The service name (weather, news, currency, github, stripe, etc.) 
 
-- resource: message, post, repo, forecast, etc. 
+- resource: What resource to act on (forecast, headlines, payment, repository, etc.) 
 
-- parameters: key-value pairs of data 
+- parameters: Key-value pairs of data needed 
 
  
 
 Examples: 
 
-"post hello world to twitter" → {"action":"CREATE","service":"twitter","resource":"post","parameters":{"text":"hello world"}} 
+Input: "get weather in Tokyo" 
 
-"get weather in New York" → {"action":"GET","service":"weather","resource":"forecast","parameters":{"location":"New York"}} 
+Output: {"action":"GET","service":"weather","resource":"forecast","parameters":{"location":"Tokyo"}} 
 
-"send message saying hi to slack channel general" → {"action":"SEND","service":"slack","resource":"message","parameters":{"text":"hi","channel":"general"}}`; 
+ 
+
+Input: "charge $50 using Stripe" 
+
+Output: {"action":"CHARGE","service":"stripe","resource":"payment","parameters":{"amount":50,"currency":"USD"}} 
+
+ 
+
+Input: "send message Hello to Slack" 
+
+Output: {"action":"SEND","service":"slack","resource":"message","parameters":{"text":"Hello"}}`; 
 
  
 
     try { 
 
-      const response = await this.openai.chat.completions.create({ 
+      const response = await axios.post( 
 
-        model: 'gpt-3.5-turbo-0125', 
+        `${this.baseUrl}/chat/completions`, 
 
-        messages: [ 
+        { 
 
-          { role: 'system', content: systemPrompt }, 
+          model: 'deepseek-chat', 
 
-          { role: 'user', content: intent } 
+          messages: [ 
 
-        ], 
+            { role: 'system', content: systemPrompt }, 
 
-        response_format: { type: 'json_object' }, 
+            { role: 'user', content: `Parse this intent: "${intent}"` } 
 
-        temperature: 0, 
+          ], 
 
-        max_tokens: 150 
+          temperature: 0.1, 
 
-      }); 
+          max_tokens: 200, 
+
+          response_format: { type: 'json_object' } 
+
+        }, 
+
+        { 
+
+          headers: { 
+
+            'Authorization': `Bearer ${this.apiKey}`, 
+
+            'Content-Type': 'application/json' 
+
+          } 
+
+        } 
+
+      ); 
 
  
 
-      const parsed = JSON.parse(response.choices[0].message.content); 
+      const parsed = JSON.parse(response.data.choices[0].message.content); 
 
-      console.log('🤖 AI parsed:', parsed); 
+      console.log('🤖 DeepSeek parsed:', parsed); 
 
       return parsed; 
 
@@ -140,7 +170,9 @@ Examples:
 
     } catch (error) { 
 
-      console.error('AI parse error:', error.message); 
+      console.error('DeepSeek parse error:', error.message); 
+
+      // Fallback to regex parsing 
 
       return this.parseWithRegex(intent); 
 
@@ -154,67 +186,137 @@ Examples:
 
     const lower = intent.toLowerCase(); 
 
+    console.log('📝 Using regex parser for:', lower); 
+
      
 
-    // Pattern matching for common intents 
+    // Enhanced regex patterns for better matching 
 
     const patterns = [ 
 
-      { 
-
-        regex: /(?:post|tweet|share)\s+(?:["'](.+?)["']|(.+?))\s+(?:to|on)\s+twitter/i, 
-
-        service: 'twitter', 
-
-        action: 'CREATE', 
-
-        resource: 'post', 
-
-        extractText: true 
-
-      }, 
+      // Weather patterns 
 
       { 
 
-        regex: /(?:send|message)\s+(?:["'](.+?)["']|(.+?))\s+to\s+slack(?:\s+channel\s+)?(?:#)?(\w+)?/i, 
-
-        service: 'slack', 
-
-        action: 'SEND', 
-
-        resource: 'message', 
-
-        extractText: true, 
-
-        extractChannel: true 
-
-      }, 
-
-      { 
-
-        regex: /(?:get|check|what's|fetch)\s+(?:the\s+)?weather\s+(?:in|for|at)\s+(.+)/i, 
-
-        service: 'weather', 
+        regex: /(?:get|check|what's|fetch|show)\s*(?:the)?\s*weather\s*(?:in|for|at)?\s*(.+)/i, 
 
         action: 'GET', 
 
+        service: 'weather', 
+
         resource: 'forecast', 
 
-        extractLocation: true 
+        extract: (match) => ({ location: match[1]?.trim() || 'London' }) 
 
       }, 
 
+      // Payment patterns 
+
       { 
 
-        regex: /create\s+(?:a\s+)?(?:github\s+)?repo(?:sitory)?\s+(?:called\s+)?(.+)/i, 
+        regex: /(?:charge|pay|process)\s*(?:\$|usd|dollars?)?\s*(\d+)\s*(?:using|via|through|with)?\s*(\w+)?/i, 
+
+        action: 'CHARGE', 
+
+        service: (match) => match[2]?.toLowerCase() || 'stripe', 
+
+        resource: 'payment', 
+
+        extract: (match) => ({ amount: parseInt(match[1]), currency: 'USD' }) 
+
+      }, 
+
+      // Integrate API patterns 
+
+      { 
+
+        regex: /(?:integrate|add|learn|setup)\s+(\w+)\s*(?:api)?(?:.*key[:\s]+([^\s]+))?/i, 
+
+        action: 'INTEGRATE', 
+
+        service: 'system', 
+
+        resource: 'api', 
+
+        extract: (match) => ({  
+
+          name: match[1],  
+
+          apiKey: match[2] || null  
+
+        }) 
+
+      }, 
+
+      // News patterns 
+
+      { 
+
+        regex: /(?:get|fetch|show|find)\s*(?:latest|top|recent)?\s*news\s*(?:about|on|for)?\s*(.+)?/i, 
+
+        action: 'GET', 
+
+        service: 'news', 
+
+        resource: 'headlines', 
+
+        extract: (match) => ({ topic: match[1]?.trim() || 'technology' }) 
+
+      }, 
+
+      // Currency patterns 
+
+      { 
+
+        regex: /(?:convert|exchange)\s*(\d+)?\s*(\w+)\s*(?:to|into)\s*(\w+)/i, 
+
+        action: 'CONVERT', 
+
+        service: 'currency', 
+
+        resource: 'rate', 
+
+        extract: (match) => ({ 
+
+          amount: parseInt(match[1]) || 1, 
+
+          from: match[2]?.toUpperCase() || 'USD', 
+
+          to: match[3]?.toUpperCase() || 'EUR' 
+
+        }) 
+
+      }, 
+
+      // GitHub patterns 
+
+      { 
+
+        regex: /(?:check|get|show)\s*github\s*(?:user|repo|repository)?\s*(.+)/i, 
+
+        action: 'GET', 
 
         service: 'github', 
 
-        action: 'CREATE', 
+        resource: 'user', 
 
-        resource: 'repository', 
+        extract: (match) => ({ username: match[1]?.trim() || 'octocat' }) 
 
-        extractName: true 
+      }, 
+
+      // Joke patterns 
+
+      { 
+
+        regex: /(?:tell|get|show)\s*(?:me)?\s*(?:a)?\s*joke/i, 
+
+        action: 'GET', 
+
+        service: 'joke', 
+
+        resource: 'joke', 
+
+        extract: () => ({ type: 'programming' }) 
 
       } 
 
@@ -222,51 +324,31 @@ Examples:
 
  
 
+    // Try each pattern 
+
     for (const pattern of patterns) { 
 
       const match = lower.match(pattern.regex); 
 
       if (match) { 
 
-        const parameters = {}; 
+        const service = typeof pattern.service === 'function'  
 
-         
+          ? pattern.service(match)  
 
-        if (pattern.extractText) { 
+          : pattern.service; 
 
-          parameters.text = match[1] || match[2] || 'Hello from IntentBridge!'; 
-
-        } 
-
-        if (pattern.extractChannel && match[3]) { 
-
-          parameters.channel = match[3]; 
-
-        } 
-
-        if (pattern.extractLocation) { 
-
-          parameters.location = match[1]; 
-
-        } 
-
-        if (pattern.extractName) { 
-
-          parameters.name = match[1]; 
-
-        } 
-
-         
+           
 
         return { 
 
           action: pattern.action, 
 
-          service: pattern.service, 
+          service: service, 
 
           resource: pattern.resource, 
 
-          parameters 
+          parameters: pattern.extract(match) 
 
         }; 
 

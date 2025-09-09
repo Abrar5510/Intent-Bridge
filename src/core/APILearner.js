@@ -4,35 +4,101 @@ import OpenAI from 'openai';
 
 import axios from 'axios'; 
 
-import * as cheerio from 'cheerio'; 
-
- 
+import * as cheerio from 'cheerio';  
 
 export class APILearner { 
 
   constructor() { 
 
-    this.openai = new OpenAI({ 
+    this.apiKey = process.env.DEEPSEEK_API_KEY; 
 
-      apiKey: process.env.OPENAI_API_KEY 
-
-    }); 
+    this.baseUrl = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1'; 
 
     this.learnedAPIs = new Map(); 
+
+     
+
+    if (this.apiKey) { 
+
+      console.log('✅ DeepSeek API Learner ready'); 
+
+    } 
 
   } 
 
  
 
-  /** 
+  async callDeepSeek(messages, systemPrompt = null) { 
 
-   * Main function - User just provides API name/URL and key 
+    try { 
 
-   */ 
+      const allMessages = []; 
+
+       
+
+      if (systemPrompt) { 
+
+        allMessages.push({ role: 'system', content: systemPrompt }); 
+
+      } 
+
+       
+
+      allMessages.push(...(Array.isArray(messages) ? messages : [messages])); 
+
+       
+
+      const response = await axios.post( 
+
+        `${this.baseUrl}/chat/completions`, 
+
+        { 
+
+          model: 'deepseek-chat', 
+
+          messages: allMessages, 
+
+          temperature: 0.1, 
+
+          max_tokens: 1000, 
+
+          response_format: { type: 'json_object' } 
+
+        }, 
+
+        { 
+
+          headers: { 
+
+            'Authorization': `Bearer ${this.apiKey}`, 
+
+            'Content-Type': 'application/json' 
+
+          } 
+
+        } 
+
+      ); 
+
+ 
+
+      return JSON.parse(response.data.choices[0].message.content); 
+
+    } catch (error) { 
+
+      console.error('DeepSeek error:', error.message); 
+
+      throw error; 
+
+    } 
+
+  } 
+
+ 
 
   async learnAPI(input) { 
 
-    console.log(`🧠 Learning new API: ${input.name || input.url}`); 
+    console.log(`🧠 Learning new API with DeepSeek: ${input.name || input.url}`); 
 
      
 
@@ -46,39 +112,15 @@ export class APILearner {
 
        
 
-      // Step 2: Fetch documentation 
+      // Step 2: Generate configuration using AI 
 
-      const documentation = await this.fetchDocumentation(apiInfo); 
+      const config = await this.generateSmartConfiguration(apiInfo, input.apiKey); 
 
-      console.log(`📖 Fetched ${documentation.length} chars of documentation`); 
-
-       
-
-      // Step 3: Analyze with AI 
-
-      const apiStructure = await this.analyzeDocumentation(documentation, apiInfo); 
-
-      console.log(`🔍 Found ${apiStructure.endpoints.length} endpoints`); 
+      console.log(`⚙️ Generated configuration for ${apiInfo.name}`); 
 
        
 
-      // Step 4: Generate configuration 
-
-      const config = await this.generateConfiguration(apiStructure, input.apiKey); 
-
-      console.log(`⚙️ Generated configuration`); 
-
-       
-
-      // Step 5: Test the configuration 
-
-      const testResult = await this.testConfiguration(config); 
-
-      console.log(`✅ Configuration ${testResult ? 'works!' : 'needs adjustment'}`); 
-
-       
-
-      // Step 6: Store in registry 
+      // Step 3: Store in registry 
 
       this.storeConfiguration(apiInfo.name, config); 
 
@@ -90,9 +132,9 @@ export class APILearner {
 
         message: `Successfully learned ${apiInfo.name} API!`, 
 
-        endpoints: config.endpoints, 
+        endpoints: Object.keys(config.endpoints), 
 
-        ready: true 
+        example: `Try: "charge $50 using ${apiInfo.name}" or "get data from ${apiInfo.name}"` 
 
       }; 
 
@@ -106,9 +148,7 @@ export class APILearner {
 
         success: false, 
 
-        error: error.message, 
-
-        suggestion: 'Try providing a direct documentation URL' 
+        error: error.message 
 
       }; 
 
@@ -118,15 +158,9 @@ export class APILearner {
 
  
 
-  /** 
-
-   * Identify what API the user wants to add 
-
-   */ 
-
   async identifyAPI(input) { 
 
-    // Common APIs with known documentation 
+    // Common APIs database 
 
     const knownAPIs = { 
 
@@ -134,11 +168,11 @@ export class APILearner {
 
         name: 'Stripe', 
 
-        docsUrl: 'https://stripe.com/docs/api', 
-
         baseUrl: 'https://api.stripe.com/v1', 
 
-        authType: 'bearer' 
+        authType: 'bearer', 
+
+        description: 'Payment processing' 
 
       }, 
 
@@ -146,11 +180,11 @@ export class APILearner {
 
         name: 'Twilio', 
 
-        docsUrl: 'https://www.twilio.com/docs', 
+        baseUrl: 'https://api.twilio.com/2010-04-01', 
 
-        baseUrl: 'https://api.twilio.com', 
+        authType: 'basic', 
 
-        authType: 'basic' 
+        description: 'SMS and communications' 
 
       }, 
 
@@ -158,23 +192,23 @@ export class APILearner {
 
         name: 'SendGrid', 
 
-        docsUrl: 'https://docs.sendgrid.com', 
-
         baseUrl: 'https://api.sendgrid.com/v3', 
 
-        authType: 'bearer' 
+        authType: 'bearer', 
+
+        description: 'Email delivery' 
 
       }, 
 
-      'openai': { 
+      'razorpay': { 
 
-        name: 'OpenAI', 
+        name: 'Razorpay', 
 
-        docsUrl: 'https://platform.openai.com/docs', 
+        baseUrl: 'https://api.razorpay.com/v1', 
 
-        baseUrl: 'https://api.openai.com/v1', 
+        authType: 'basic', 
 
-        authType: 'bearer' 
+        description: 'Payment gateway' 
 
       }, 
 
@@ -182,11 +216,11 @@ export class APILearner {
 
         name: 'EasyPaisa', 
 
-        docsUrl: 'https://easypaisa.com.pk/api-docs', 
+        baseUrl: 'https://api.easypaisa.com.pk/v1', 
 
-        baseUrl: 'https://api.easypaisa.com.pk', 
+        authType: 'custom', 
 
-        authType: 'custom' 
+        description: 'Pakistani payment gateway' 
 
       }, 
 
@@ -194,11 +228,11 @@ export class APILearner {
 
         name: 'JazzCash', 
 
-        docsUrl: 'https://jazzcash.com.pk/api', 
+        baseUrl: 'https://api.jazzcash.com.pk/v1', 
 
-        baseUrl: 'https://api.jazzcash.com.pk', 
+        authType: 'custom', 
 
-        authType: 'custom' 
+        description: 'Pakistani mobile payments' 
 
       } 
 
@@ -206,9 +240,11 @@ export class APILearner {
 
  
 
-    // Check if it's a known API 
+    const searchTerm = (input.name || '').toLowerCase(); 
 
-    const searchTerm = (input.name || input.url || '').toLowerCase(); 
+     
+
+    // Check known APIs 
 
     for (const [key, info] of Object.entries(knownAPIs)) { 
 
@@ -222,279 +258,193 @@ export class APILearner {
 
  
 
-    // If not known, try to extract from URL 
+    // If unknown, ask AI to identify 
 
-    if (input.url) { 
+    if (!knownAPIs[searchTerm]) { 
 
-      return { 
-
-        name: this.extractNameFromUrl(input.url), 
-
-        docsUrl: input.url, 
-
-        baseUrl: this.extractBaseUrl(input.url), 
-
-        authType: 'unknown' 
-
-      }; 
-
-    } 
-
- 
-
-    // Use AI to identify 
-
-    const response = await this.openai.chat.completions.create({ 
-
-      model: 'gpt-3.5-turbo', 
-
-      messages: [{ 
+      const prompt = { 
 
         role: 'user', 
 
-        content: `Identify this API and provide its documentation URL: "${input.name}"` 
+        content: `Identify this API and provide details: "${input.name}". Return JSON with: name, baseUrl, authType, description` 
 
-      }], 
-
-      response_format: { type: 'json_object' } 
-
-    }); 
-
- 
-
-    return JSON.parse(response.choices[0].message.content); 
-
-  } 
-
- 
-
-  /** 
-
-   * Fetch and parse API documentation 
-
-   */ 
-
-  async fetchDocumentation(apiInfo) { 
-
-    try { 
-
-      // For demo, we'll simulate fetching docs 
-
-      // In production, this would actually scrape the documentation 
+      }; 
 
        
 
-      if (apiInfo.name === 'Stripe') { 
+      try { 
 
-        return this.getStripeSampleDocs(); 
+        const result = await this.callDeepSeek([prompt]); 
 
-      } 
+        return result; 
 
-       
+      } catch (error) { 
 
-      // Try to fetch actual documentation 
+        // Default structure 
 
-      const response = await axios.get(apiInfo.docsUrl, { 
+        return { 
 
-        timeout: 5000, 
+          name: input.name || 'Unknown API', 
 
-        headers: { 
+          baseUrl: `https://api.${searchTerm}.com/v1`, 
 
-          'User-Agent': 'Mozilla/5.0 (IntentBridge/1.0)' 
+          authType: 'bearer', 
 
-        } 
+          description: 'External API service' 
 
-      }); 
-
- 
-
-      // Parse HTML to extract API information 
-
-      const $ = cheerio.load(response.data); 
-
-       
-
-      // Look for API endpoints, methods, parameters 
-
-      const apiContent = []; 
-
-       
-
-      // Common selectors for API documentation 
-
-      $('code, pre, .endpoint, .api-method, .api-path').each((i, elem) => { 
-
-        apiContent.push($(elem).text()); 
-
-      }); 
-
- 
-
-      return apiContent.join('\n').substring(0, 10000); // Limit size 
-
-       
-
-    } catch (error) { 
-
-      console.log('Could not fetch actual docs, using sample'); 
-
-      return this.getSampleDocumentation(apiInfo.name); 
-
-    } 
-
-  } 
-
- 
-
-  /** 
-
-   * Use AI to understand the API structure 
-
-   */ 
-
-  async analyzeDocumentation(documentation, apiInfo) { 
-
-    const prompt = ` 
-
-    Analyze this API documentation and extract the structure. 
-
-    API Name: ${apiInfo.name} 
-
-     
-
-    Documentation excerpt: 
-
-    ${documentation.substring(0, 3000)} 
-
-     
-
-    Return a JSON object with: 
-
-    { 
-
-      "endpoints": [ 
-
-        { 
-
-          "name": "endpoint name", 
-
-          "path": "/api/path", 
-
-          "method": "GET/POST/etc", 
-
-          "description": "what it does", 
-
-          "parameters": [ 
-
-            {"name": "param1", "type": "string", "required": true} 
-
-          ] 
-
-        } 
-
-      ], 
-
-      "authentication": { 
-
-        "type": "bearer/basic/apikey/oauth", 
-
-        "header": "Authorization", 
-
-        "format": "Bearer {token}" 
-
-      }, 
-
-      "baseUrl": "https://api.example.com", 
-
-      "commonPatterns": { 
-
-        "pagination": "page/limit", 
-
-        "filtering": "query parameters", 
-
-        "errors": "status codes" 
+        }; 
 
       } 
 
     } 
 
-     
-
-    Focus on the most important/common endpoints.`; 
-
- 
-
-    const response = await this.openai.chat.completions.create({ 
-
-      model: 'gpt-3.5-turbo', 
-
-      messages: [ 
-
-        { 
-
-          role: 'system', 
-
-          content: 'You are an API documentation analyzer. Extract structured information from API docs.' 
-
-        }, 
-
-        { 
-
-          role: 'user', 
-
-          content: prompt 
-
-        } 
-
-      ], 
-
-      response_format: { type: 'json_object' }, 
-
-      temperature: 0.1 
-
-    }); 
-
- 
-
-    return JSON.parse(response.choices[0].message.content); 
-
   } 
 
  
 
-  /** 
+  async generateSmartConfiguration(apiInfo, apiKey) { 
 
-   * Generate IntentBridge configuration from analyzed structure 
+    // Ask DeepSeek to generate common endpoints for this API 
 
-   */ 
+    const systemPrompt = `You are an API expert. Generate common endpoints for APIs based on their type.`; 
 
-  async generateConfiguration(apiStructure, apiKey) { 
+     
 
-    const config = { 
+    const prompt = { 
 
-      name: apiStructure.name || 'Unknown API', 
+      role: 'user', 
 
-      baseUrl: apiStructure.baseUrl, 
+      content: `Generate a configuration for ${apiInfo.name} API (${apiInfo.description}). 
 
-      apiKey: apiKey, 
+       
 
-      endpoints: {}, 
+      Return JSON with common endpoints in this format: 
 
-      authentication: apiStructure.authentication 
+      { 
+
+        "name": "${apiInfo.name}", 
+
+        "baseUrl": "${apiInfo.baseUrl}", 
+
+        "endpoints": { 
+
+          "CREATE_payment": { 
+
+            "method": "POST", 
+
+            "path": "/payments", 
+
+            "description": "Create a payment", 
+
+            "paramMapping": { 
+
+              "amount": "amount", 
+
+              "currency": "currency" 
+
+            } 
+
+          } 
+
+        } 
+
+      } 
+
+       
+
+      Include the most common/useful endpoints for this type of service.` 
 
     }; 
 
  
 
-    // Convert analyzed endpoints to IntentBridge format 
+    try { 
 
-    for (const endpoint of apiStructure.endpoints) { 
-
-      const key = `${endpoint.method}_${endpoint.name.replace(/\s+/g, '_')}`; 
+      const config = await this.callDeepSeek([prompt], systemPrompt); 
 
        
 
-      config.endpoints[key] = { 
+      // Add authentication 
+
+      config.authentication = { 
+
+        type: apiInfo.authType, 
+
+        apiKey: apiKey 
+
+      }; 
+
+       
+
+      // Add auth headers to each endpoint 
+
+      for (const key in config.endpoints) { 
+
+        config.endpoints[key].headers = this.getAuthHeaders(apiInfo.authType, apiKey); 
+
+      } 
+
+       
+
+      return config; 
+
+    } catch (error) { 
+
+      // Fallback configuration 
+
+      return this.getDefaultConfig(apiInfo, apiKey); 
+
+    } 
+
+  } 
+
+ 
+
+  getDefaultConfig(apiInfo, apiKey) { 
+
+    // Default configuration for unknown APIs 
+
+    const config = { 
+
+      name: apiInfo.name, 
+
+      baseUrl: apiInfo.baseUrl, 
+
+      authentication: { 
+
+        type: apiInfo.authType, 
+
+        apiKey: apiKey 
+
+      }, 
+
+      endpoints: {} 
+
+    }; 
+
+ 
+
+    // Add common CRUD endpoints 
+
+    const commonEndpoints = [ 
+
+      { key: 'GET_list', method: 'GET', path: '/', description: 'List all items' }, 
+
+      { key: 'GET_item', method: 'GET', path: '/{id}', description: 'Get single item' }, 
+
+      { key: 'CREATE_item', method: 'POST', path: '/', description: 'Create new item' }, 
+
+      { key: 'UPDATE_item', method: 'PUT', path: '/{id}', description: 'Update item' }, 
+
+      { key: 'DELETE_item', method: 'DELETE', path: '/{id}', description: 'Delete item' } 
+
+    ]; 
+
+ 
+
+    for (const endpoint of commonEndpoints) { 
+
+      config.endpoints[endpoint.key] = { 
 
         method: endpoint.method, 
 
@@ -502,33 +452,11 @@ export class APILearner {
 
         description: endpoint.description, 
 
-        paramMapping: {}, 
+        headers: this.getAuthHeaders(apiInfo.authType, apiKey), 
 
-        required: [], 
-
-        headers: this.getAuthHeaders(apiStructure.authentication, apiKey) 
+        paramMapping: {} 
 
       }; 
-
- 
-
-      // Map parameters 
-
-      if (endpoint.parameters) { 
-
-        for (const param of endpoint.parameters) { 
-
-          config.endpoints[key].paramMapping[param.name] = param.name; 
-
-          if (param.required) { 
-
-            config.endpoints[key].required.push(param.name); 
-
-          } 
-
-        } 
-
-      } 
 
     } 
 
@@ -540,113 +468,13 @@ export class APILearner {
 
  
 
-  /** 
+  getAuthHeaders(authType, apiKey) { 
 
-   * Test if the configuration works 
-
-   */ 
-
-  async testConfiguration(config) { 
-
-    try { 
-
-      // Try to make a simple API call to verify it works 
-
-      // For demo, we'll just return true 
-
-      console.log('🧪 Testing configuration...'); 
-
-       
-
-      // In production, make actual test call 
-
-      if (config.endpoints['GET_status'] || config.endpoints['GET_health']) { 
-
-        // Try health check endpoint 
-
-        return true; 
-
-      } 
-
-       
-
-      return true; // Assume it works for demo 
-
-       
-
-    } catch (error) { 
-
-      console.error('Test failed:', error); 
-
-      return false; 
-
-    } 
-
-  } 
-
- 
-
-  /** 
-
-   * Store the learned configuration 
-
-   */ 
-
-  storeConfiguration(name, config) { 
-
-    this.learnedAPIs.set(name.toLowerCase(), config); 
+    if (!apiKey) return {}; 
 
      
 
-    // Also update the main registry 
-
-    if (global.apiRegistry) { 
-
-      global.apiRegistry.register(name.toLowerCase(), config); 
-
-    } 
-
-     
-
-    console.log(`💾 Stored configuration for ${name}`); 
-
-  } 
-
- 
-
-  /** 
-
-   * Helper functions 
-
-   */ 
-
-  extractNameFromUrl(url) { 
-
-    const match = url.match(/(?:https?:\/\/)?(?:www\.)?([^\/\.]+)/); 
-
-    return match ? match[1].charAt(0).toUpperCase() + match[1].slice(1) : 'Unknown'; 
-
-  } 
-
- 
-
-  extractBaseUrl(url) { 
-
-    const match = url.match(/(https?:\/\/[^\/]+)/); 
-
-    return match ? match[1] : url; 
-
-  } 
-
- 
-
-  getAuthHeaders(auth, apiKey) { 
-
-    if (!auth || !apiKey) return {}; 
-
-     
-
-    switch (auth.type) { 
+    switch (authType) { 
 
       case 'bearer': 
 
@@ -654,11 +482,15 @@ export class APILearner {
 
       case 'basic': 
 
-        return { 'Authorization': `Basic ${apiKey}` }; 
+        return { 'Authorization': `Basic ${Buffer.from(apiKey).toString('base64')}` }; 
 
       case 'apikey': 
 
         return { 'X-API-Key': apiKey }; 
+
+      case 'custom': 
+
+        return { 'API-Key': apiKey }; 
 
       default: 
 
@@ -670,135 +502,25 @@ export class APILearner {
 
  
 
-  /** 
+  storeConfiguration(name, config) { 
 
-   * Sample documentation for demo 
-
-   */ 
-
-  getSampleDocumentation(apiName) { 
-
-    return ` 
-
-    API: ${apiName} 
-
-    Base URL: https://api.${apiName.toLowerCase()}.com/v1 
+    this.learnedAPIs.set(name.toLowerCase(), config); 
 
      
 
-    Authentication: Bearer Token 
+    // Update global registry 
 
-    Header: Authorization: Bearer YOUR_API_KEY 
+    if (global.apiRegistry) { 
 
-     
+      global.apiRegistry.register(name.toLowerCase(), config); 
 
-    Endpoints: 
-
-     
-
-    POST /payments 
-
-    Create a new payment 
-
-    Parameters: 
-
-    - amount (required): Payment amount in cents 
-
-    - currency: Three-letter ISO currency code 
-
-    - description: Payment description 
+    } 
 
      
 
-    GET /payments/{id} 
+    console.log(`💾 Stored configuration for ${name}`); 
 
-    Retrieve a payment 
-
-    Parameters: 
-
-    - id (required): Payment ID 
-
-     
-
-    POST /refunds 
-
-    Create a refund 
-
-    Parameters: 
-
-    - payment_id (required): ID of payment to refund 
-
-    - amount: Amount to refund (default: full amount) 
-
-     
-
-    GET /customers 
-
-    List all customers 
-
-    Parameters: 
-
-    - limit: Number of customers to return 
-
-    - page: Page number for pagination 
-
-    `; 
-
-  } 
-
- 
-
-  getStripeSampleDocs() { 
-
-    return ` 
-
-    Stripe API Documentation 
-
-     
-
-    Base URL: https://api.stripe.com/v1 
-
-    Authentication: Bearer sk_test_... or sk_live_... 
-
-     
-
-    Core Resources: 
-
-     
-
-    Charges 
-
-    POST /v1/charges - Create a charge 
-
-    Required: amount, currency 
-
-    Optional: customer, description, metadata 
-
-     
-
-    Customers   
-
-    POST /v1/customers - Create a customer 
-
-    GET /v1/customers/{id} - Retrieve a customer 
-
-     
-
-    Payment Intents 
-
-    POST /v1/payment_intents - Create a payment intent 
-
-    Required: amount, currency 
-
-     
-
-    Refunds 
-
-    POST /v1/refunds - Create a refund 
-
-    Required: charge or payment_intent 
-
-    `; 
+    console.log(`📝 Available endpoints:`, Object.keys(config.endpoints)); 
 
   } 
 
