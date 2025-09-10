@@ -76,7 +76,7 @@ IntentBridge eliminates ALL of this complexity:
 
 - **Framework**: Express.js 
 
-- **Database**: SQLite (learning patterns) 
+- **Smithery**: https://smithery.ai/server/@Abrar5510/intent-bridge/
 
  
 
