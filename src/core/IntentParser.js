@@ -32,19 +32,20 @@ export class IntentParser {
     }
 
     let parsed;
-    
-    // For reliability, prefer regex parsing for demo
-    // Comment this out if you want to test DeepSeek
-    if (true) { // Force regex for demo reliability
-      parsed = this.parseWithRegex(intent);
-    } else if (this.useAI) {
+
+    // Use DeepSeek for API integration intents, regex for others
+    const isAPIIntegration = intent.toLowerCase().includes('integrate') ||
+                            (intent.toLowerCase().includes('add') && intent.toLowerCase().includes('api'));
+
+    if (isAPIIntegration && this.useAI) {
       try {
         parsed = await this.parseWithDeepSeek(intent);
       } catch (error) {
-        console.error('DeepSeek failed, using fallback:', error.message);
+        console.error('DeepSeek failed for API integration, using fallback:', error.message);
         parsed = this.parseWithRegex(intent);
       }
     } else {
+      // Use regex for regular intents (more reliable for demo)
       parsed = this.parseWithRegex(intent);
     }
     
