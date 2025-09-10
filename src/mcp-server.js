@@ -1,4 +1,5 @@
 // src/mcp-server.js 
+import './env.js';
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'; 
 
