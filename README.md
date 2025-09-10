@@ -34,9 +34,9 @@ IntentBridge eliminates ALL of this complexity:
 
  
 
-**Team Name:** [Your Team Name]   
+**Team Name:** [Ai Agent]   
 
-**Team Members:** [Your Names]   
+**Team Members:** [Abrar Ahmad]   
 
 **Hackathon Theme:** Theme 2 - Build a Secure MCP Server for Agents   
 
