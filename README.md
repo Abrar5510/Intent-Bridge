@@ -2,7 +2,8 @@
 
  
 
-Transform natural language into API calls instantly. Built for the Descope MCP Hackathon 2025. 
+Transform natural language into API calls instantly. No documentation. No SDKs. Just describe what you want.
+Built for the Descope MCP Hackathon 2025. 
 
  
 
@@ -10,10 +11,9 @@ Transform natural language into API calls instantly. Built for the Descope MCP H
 
  
 
-IntentBridge is an MCP server that acts as a universal translator between AI agents and ANY API. Instead of writing integration code for each API, agents can simply say what they want in natural language. 
+IntentBridge is an MCP server that acts as a universal translator between AI agents and ANY API. Instead of writing integration code for each API, users can simply say what they want in natural language. 
 
  
-
 ### The Problem​​​​​​​​​​​​​​​​ 
 
 - Every API requires different SDKs, authentication, and documentation 
