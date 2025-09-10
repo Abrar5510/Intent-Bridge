@@ -1,13 +1,20 @@
+
 // server.js
-import express from "express";
-import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
+import './env.js';
+
+// Now import everything else
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { IntentBridge } from './core/IntentBridge.js';
 import os from "os";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import { IntentBridge } from "./core/IntentBridge.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const intentBridge = new IntentBridge();
 
