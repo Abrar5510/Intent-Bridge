@@ -2,7 +2,7 @@
 import '../env.js';
 
 import axios from 'axios';
-import * as cheerio from 'cheerio';
+
 
 export class APILearner {
   constructor() {

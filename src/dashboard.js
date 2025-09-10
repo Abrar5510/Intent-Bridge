@@ -13,8 +13,6 @@ import os from "os";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-import { IntentBridge } from "./core/IntentBridge.js";
-
 const app = express();
 const intentBridge = new IntentBridge();
 
