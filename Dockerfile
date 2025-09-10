@@ -48,6 +48,6 @@ ENV PORT=3000
 
  
 
-# The MCP server command 
-
-CMD ["node", "src/mcp-server.js"] 
+# For render (web app), run dashboard
+# For smithery (MCP), smithery.yaml overrides this with mcp-server
+CMD ["node", "src/dashboard.js"]
