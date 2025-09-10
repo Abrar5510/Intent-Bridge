@@ -1,31 +1,24 @@
 // src/core/APILearner.js 
+import '../env.js';
 
-import OpenAI from 'openai'; 
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 
-import axios from 'axios'; 
-//import * as cheerio from 'cheerio';  
-
-export class APILearner { 
-
-  constructor() { 
-
-    this.apiKey = process.env.DEEPSEEK_API_KEY; 
-
-    this.baseUrl = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1'; 
-
-    this.learnedAPIs = new Map(); 
-
-     
-
-    if (this.apiKey) { 
-
-      console.log('✅ DeepSeek API Learner ready'); 
-
-    } 
-
+export class APILearner {
+  constructor() {
+    this.apiKey = process.env.DEEPSEEK_API_KEY;
+    this.baseUrl = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1';
+    
+    if (!this.apiKey) {
+      console.log('⚠️ APILearner: Running without AI (pattern-based learning only)');
+      this.useAI = false;
+    } else {
+      console.log('✅ APILearner: AI-powered learning ready');
+      this.useAI = true;
+    }
+    
+    this.learnedAPIs = new Map();
   } 
-
- 
 
   async callDeepSeek(messages, systemPrompt = null) { 
 
