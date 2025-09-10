@@ -13,9 +13,9 @@
       "apiConfig": {
         "name": "OpenWeatherMap"
       },
-      "executionCount": 1,
-      "averageResponseTime": 3660,
-      "lastUsed": "2025-09-09T15:30:18.732Z"
+      "executionCount": 2,
+      "averageResponseTime": 7685.5,
+      "lastUsed": "2025-09-10T16:12:22.977Z"
     },
     "get_weather_in_new_york": {
       "intent": "get weather in New York",
@@ -30,17 +30,34 @@
       "apiConfig": {
         "name": "OpenWeatherMap"
       },
+      "executionCount": 2,
+      "averageResponseTime": 4055.5,
+      "lastUsed": "2025-09-10T16:13:05.230Z"
+    },
+    "weather_in_tokyo": {
+      "intent": "weather in tokyo",
+      "parsed": {
+        "action": "GET",
+        "service": "weather",
+        "resource": "forecast",
+        "parameters": {
+          "location": "tokyo"
+        }
+      },
+      "apiConfig": {
+        "name": "OpenWeatherMap"
+      },
       "executionCount": 1,
-      "averageResponseTime": 3188,
-      "lastUsed": "2025-09-10T11:55:15.429Z"
+      "averageResponseTime": 4952,
+      "lastUsed": "2025-09-10T16:12:44.153Z"
     }
   },
   "stats": {
-    "totalExecutions": 2,
-    "successfulExecutions": 2,
+    "totalExecutions": 5,
+    "successfulExecutions": 5,
     "failedExecutions": 0,
-    "uniquePatterns": 2,
-    "averageResponseTime": 3424
+    "uniquePatterns": 3,
+    "averageResponseTime": 5686.8
   },
-  "lastUpdated": "2025-09-10T11:55:15.429Z"
+  "lastUpdated": "2025-09-10T16:13:05.230Z"
 }

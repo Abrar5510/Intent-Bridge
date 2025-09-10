@@ -1,0 +1,255 @@
+openapi: 3.0.3
+info:
+  title: IntentBridge Dashboard API
+  version: 1.0.0
+  description: REST API for IntentBridge dashboard to execute natural language intents and manage API integrations
+  contact:
+    name: IntentBridge Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://intent-bridge.example.com
+    description: Production server
+
+paths:
+  /api/execute:
+    post:
+      summary: Execute a natural language intent
+      description: Execute any API action using natural language description
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                intent:
+                  type: string
+                  description: Natural language description of what you want to do
+                  example: "get weather in Tokyo"
+              required:
+                - intent
+      responses:
+        '200':
+          description: Intent executed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Execution result (varies based on intent)
+                additionalProperties: true
+        '400':
+          description: Bad request - intent is required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Intent is required"
+
+  /api/apis:
+    get:
+      summary: List all registered APIs
+      description: Get a list of all APIs that have been registered with IntentBridge
+      responses:
+        '200':
+          description: List of registered APIs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apis:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          example: "OpenWeatherMap"
+                        baseUrl:
+                          type: string
+                          example: "https://api.openweathermap.org"
+                        key:
+                          type: string
+                          description: API key (masked for security)
+
+  /api/register:
+    post:
+      summary: Register a new API
+      description: Dynamically register a new API integration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: Unique identifier for the API
+                  example: "weather"
+                name:
+                  type: string
+                  description: Display name of the API
+                  example: "OpenWeatherMap"
+                baseUrl:
+                  type: string
+                  description: Base URL of the API
+                  example: "https://api.openweathermap.org/data/2.5"
+                key:
+                  type: string
+                  description: API key for authentication (optional)
+                  example: "your-api-key-here"
+              required:
+                - id
+                - name
+                - baseUrl
+      responses:
+        '200':
+          description: API registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "API \"OpenWeatherMap\" registered."
+        '400':
+          description: Bad request - missing required fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "id, name, and baseUrl are required"
+
+  /api/stats:
+    get:
+      summary: Get usage statistics
+      description: Retrieve usage statistics and performance metrics
+      responses:
+        '200':
+          description: Statistics data
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Statistics object with various metrics
+                additionalProperties: true
+
+  /api/history:
+    get:
+      summary: Get execution history
+      description: Retrieve the history of executed intents
+      responses:
+        '200':
+          description: Execution history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  history:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        intent:
+                          type: string
+                          example: "get weather in New York"
+                        result:
+                          type: object
+                          description: Execution result
+                          additionalProperties: true
+                        timestamp:
+                          type: string
+                          format: date-time
+                          example: "2024-01-15T10:30:00Z"
+
+  /api/demo:
+    post:
+      summary: Run demo intents
+      description: Execute a series of demo intents to showcase functionality
+      responses:
+        '200':
+          description: Demo execution results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  demos:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        intent:
+                          type: string
+                          example: "get weather in New York"
+                        result:
+                          type: object
+                          description: Demo execution result
+                          additionalProperties: true
+
+  /health:
+    get:
+      summary: Health check
+      description: Check if the service is running and healthy
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  service:
+                    type: string
+                    example: "IntentBridge"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2024-01-15T10:30:00Z"
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    API:
+      type: object
+      properties:
+        name:
+          type: string
+        baseUrl:
+          type: string
+        key:
+          type: string
+      required:
+        - name
+        - baseUrl
+
+    ExecutionResult:
+      type: object
+      description: Generic execution result object
+      additionalProperties: true
