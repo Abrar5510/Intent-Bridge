@@ -109,8 +109,3 @@ git clone https://github.com/yourusername/intent-bridge.git
 cd intent-bridge 
 
     
-2. **Install dependencies**
-
-```bash 
-
-npm install
