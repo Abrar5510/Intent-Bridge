@@ -1,31 +1,84 @@
-{ 
-
-  "name": "intent-bridge", 
-
-  "description": "Natural language API execution for AI agents", 
-
-  "version": "1.0.0", 
-
-  "author": "Your Name", 
-
-  "entry": "src/mcp-server.js", 
-
-  "tools": [ 
-
-    { 
-
-      "name": "execute_intent", 
-
-      "description": "Execute any API using natural language", 
-
-      "parameters": { 
-
-        "intent": "string" 
-
-      } 
-
-    } 
-
-  ] 
-
-} 
+{
+  "name": "intent-bridge",
+  "version": "1.0.0",
+  "description": "Auto-learning API integration through natural language",
+  "author": "Abrar Ahmad",
+  "license": "MIT",
+  "entry": "src/mcp-server.js",
+  "mcp": {
+    "command": "node",
+    "args": ["src/mcp-server.js"]
+  },
+  "tools": [
+    {
+      "name": "execute_intent",
+      "description": "Execute any API action using natural language",
+      "parameters": {
+        "intent": {
+          "type": "string",
+          "description": "Natural language description of what you want to do",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "learn_api",
+      "description": "Automatically learn and integrate a new API",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "Name of the API (e.g., Stripe, Twilio)",
+          "required": true
+        },
+        "apiKey": {
+          "type": "string",
+          "description": "Your API key for authentication",
+          "required": true
+        },
+        "docsUrl": {
+          "type": "string",
+          "description": "Optional documentation URL",
+          "required": false
+        }
+      }
+    },
+    {
+      "name": "list_apis",
+      "description": "List all available and learned APIs",
+      "parameters": {}
+    },
+    {
+      "name": "get_stats",
+      "description": "Get usage statistics and performance metrics",
+      "parameters": {}
+    }
+  ],
+  "environment": [
+    {
+      "name": "DEEPSEEK_API_KEY",
+      "description": "DeepSeek API key for AI parsing",
+      "required": true
+    },
+    {
+      "name": "DESCOPE_PROJECT_ID",
+      "description": "Descope project ID for authentication",
+      "required": false
+    },
+    {
+      "name": "CEQUENCE_API_KEY",
+      "description": "Cequence API key for security gateway",
+      "required": false
+    }
+  ],
+  "tags": [
+    "api-integration",
+    "natural-language",
+    "ai-powered",
+    "auto-learning",
+    "mcp",
+    "descope",
+    "cequence"
+  ],
+  "readme": "README.md",
+  "repository": "https://github.com/Abrar5510/Intent-Bridge"
+}
