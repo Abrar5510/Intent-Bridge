@@ -50,14 +50,31 @@
       "executionCount": 1,
       "averageResponseTime": 4952,
       "lastUsed": "2025-09-10T16:12:44.153Z"
+    },
+    "get_weather_in_paris": {
+      "intent": "get weather in Paris",
+      "parsed": {
+        "action": "GET",
+        "service": "weather",
+        "resource": "forecast",
+        "parameters": {
+          "location": "paris"
+        }
+      },
+      "apiConfig": {
+        "name": "OpenWeatherMap"
+      },
+      "executionCount": 2,
+      "averageResponseTime": 38.5,
+      "lastUsed": "2025-10-28T10:38:00.311Z"
     }
   },
   "stats": {
-    "totalExecutions": 5,
-    "successfulExecutions": 5,
+    "totalExecutions": 7,
+    "successfulExecutions": 7,
     "failedExecutions": 0,
-    "uniquePatterns": 3,
-    "averageResponseTime": 5686.8
+    "uniquePatterns": 4,
+    "averageResponseTime": 4073
   },
-  "lastUpdated": "2025-09-10T16:13:05.230Z"
+  "lastUpdated": "2025-10-28T10:38:00.311Z"
 }
