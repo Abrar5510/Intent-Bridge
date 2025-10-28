@@ -70,9 +70,9 @@ export class APIExecutor {
 
  
 
-  buildRequest(apiConfig, parameters) { 
+  buildRequest(apiConfig, parameters) {
 
-    const endpoint = apiConfig.endpoints[Object.keys(apiConfig.endpoints)[0]]; 
+    const endpoint = apiConfig.selectedEndpoint;
 
     let url = `${apiConfig.baseUrl}${endpoint.path}`; 
 
