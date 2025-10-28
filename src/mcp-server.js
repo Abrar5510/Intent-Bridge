@@ -1,11 +1,16 @@
-// src/mcp-server.js 
+// src/mcp-server.js
 import './env.js';
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js'; 
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'; 
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
-import dotenv from 'dotenv'; 
+import {
+  ListToolsRequestSchema,
+  CallToolRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
+
+import dotenv from 'dotenv';
 
 import { IntentBridge } from './core/IntentBridge.js'; 
 
@@ -117,9 +122,9 @@ const server = new Server(
 
  
 
-// Register available tools 
+// Register available tools
 
-server.setRequestHandler('tools/list', async () => ({ 
+server.setRequestHandler(ListToolsRequestSchema, async () => ({ 
 
   tools: [ 
 
@@ -189,9 +194,9 @@ server.setRequestHandler('tools/list', async () => ({
 
  
 
-// Handle tool execution 
+// Handle tool execution
 
-server.setRequestHandler('tools/call', async (request) => { 
+server.setRequestHandler(CallToolRequestSchema, async (request) => { 
 
   const { name, arguments: args } = request.params; 
 
@@ -201,13 +206,19 @@ server.setRequestHandler('tools/call', async (request) => {
 
    
 
-  try { 
+  try {
 
-    switch (name) { 
+    switch (name) {
 
-      case 'execute_intent': { 
+      case 'execute_intent': {
 
-        console.error(`🎯 Executing intent: "${args.intent}"`); 
+        if (!args || !args.intent) {
+
+          throw new Error('Missing required parameter: intent');
+
+        }
+
+        console.error(`🎯 Executing intent: "${args.intent}"`);
 
         const result = await intentBridge.execute(args.intent); 
 
@@ -233,9 +244,15 @@ server.setRequestHandler('tools/call', async (request) => {
 
        
 
-      case 'list_apis': { 
+      case 'list_apis': {
 
-        const apis = intentBridge.listAPIs(); 
+        const apis = intentBridge.listAPIs();
+
+        if (!apis || !Array.isArray(apis)) {
+
+          throw new Error('Failed to retrieve API list');
+
+        } 
 
         return { 
 
@@ -257,9 +274,15 @@ server.setRequestHandler('tools/call', async (request) => {
 
        
 
-      case 'get_stats': { 
+      case 'get_stats': {
 
-        const stats = intentBridge.getStats(); 
+        const stats = intentBridge.getStats();
+
+        if (!stats) {
+
+          throw new Error('Failed to retrieve statistics');
+
+        } 
 
         return { 
 

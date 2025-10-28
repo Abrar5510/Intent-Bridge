@@ -10,9 +10,9 @@ dotenv.config();
 
  
 
-console.log('🧪 IntentBridge Test Suite\n'); 
+console.log('🧪 IntentBridge Test Suite\n');
 
-console.log('=' .repeat(50)); 
+console.log('='.repeat(50)); 
 
  
 
@@ -120,11 +120,11 @@ async function runTests() {
 
      
 
-    console.log('\n' + '='.repeat(50)); 
+    console.log('\n' + '='.repeat(50));
 
-    console.log(`📊 Results: ${passed} passed, ${failed} failed`); 
+    console.log(`📊 Results: ${passed} passed, ${failed} failed`);
 
-    console.log('=' .repeat(50)); 
+    console.log('='.repeat(50)); 
 
 } 
 
